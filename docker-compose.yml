@@ -14,8 +14,11 @@ services:
       - OLLAMA_URL=http://ollama:11434
       - MODEL=llama3.2:3b
       - CORS_ORIGINS=http://localhost:3000,http://localhost:5173
+      - DATA_DIR=/app/data            # sqlite db, chroma/, uploads/
+      - HF_HOME=/root/.cache/huggingface
     volumes:
-      - ./data:/app/data
+      - appdata:/app/data             # persists SQLite + ChromaDB + uploads
+      - hf_cache:/root/.cache/huggingface  # embedding model, downloaded once
     depends_on:
       - ollama
 
@@ -27,4 +30,6 @@ services:
       - ollama:/root/.ollama
 
 volumes:
+  appdata:
+  hf_cache:
   ollama:
