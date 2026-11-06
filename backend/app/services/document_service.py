@@ -1,18 +1,29 @@
+import asyncio
+import logging
 import uuid
 from pathlib import Path
 
 from app.core.exceptions import BadRequestError, ConflictError, UnsupportedFileTypeError
 from app.db.models import Document, FileType
+from app.messaging.ingest_queue import IngestQueue
 from app.repositories.department_repository import DepartmentRepository
 from app.repositories.document_repository import DocumentRepository
 from app.services import file_storage
 from app.services.file_storage import AsyncReadable
 
+log = logging.getLogger(__name__)
+
 
 class DocumentService:
-    def __init__(self, documents: DocumentRepository, departments: DepartmentRepository):
+    def __init__(
+        self,
+        documents: DocumentRepository,
+        departments: DepartmentRepository,
+        ingest_queue: IngestQueue,
+    ):
         self.documents = documents
         self.departments = departments
+        self.ingest_queue = ingest_queue
 
     async def upload(
         self,
@@ -60,6 +71,13 @@ class DocumentService:
             self.documents.rollback()
             temp.discard()
             raise
+
+        # The upload is saved either way; if the queue is down the document just stays
+        # 'uploaded' and can be re-queued later.
+        try:
+            await asyncio.to_thread(self.ingest_queue.enqueue, doc.id)
+        except Exception:
+            log.exception("Could not enqueue document %s for ingestion", doc.id)
 
         return self.documents.refresh(doc)
 

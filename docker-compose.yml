@@ -1,3 +1,18 @@
+# Shared by backend + ingestion-worker (same image, same config)
+x-backend-env: &backend-env
+  DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-placement}:${POSTGRES_PASSWORD:-placement}@postgres:5432/${POSTGRES_DB:-placement_db}
+  RABBITMQ_URL: amqp://${RABBITMQ_USER:-placement}:${RABBITMQ_PASSWORD:-placement}@rabbitmq:5672/
+  OLLAMA_URL: http://ollama:11434
+  MODEL: llama3.2:3b
+  DATA_DIR: /app/data                 # chroma/, uploads/, models/
+  HF_HOME: /root/.cache/huggingface
+  WATCHFILES_FORCE_POLLING: "true"    # file-change events don't cross Windows bind mounts
+
+x-backend-volumes: &backend-volumes
+  - ./backend/app:/app/app            # live code mount (dev)
+  - appdata:/app/data                 # persists ChromaDB + uploads
+  - hf_cache:/root/.cache/huggingface # embedding model, downloaded once
+
 services:
   frontend:
     build: ./frontend
@@ -7,28 +22,55 @@ services:
       - backend
 
   backend:
+    image: placement-backend:latest
     build: ./backend
-    # Dev: auto-reload on code changes (code is mounted from ./backend/app below)
+    # Dev: auto-reload on code changes (code is mounted from ./backend/app)
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/app
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql+psycopg://${POSTGRES_USER:-placement}:${POSTGRES_PASSWORD:-placement}@postgres:5432/${POSTGRES_DB:-placement_db}
-      - OLLAMA_URL=http://ollama:11434
-      - MODEL=llama3.2:3b
-      - CORS_ORIGINS=http://localhost:3000,http://localhost:5173
-      - DATA_DIR=/app/data            # chroma/, uploads/, models/
-      - HF_HOME=/root/.cache/huggingface
-      - WATCHFILES_FORCE_POLLING=true # file-change events don't cross Windows bind mounts
-    volumes:
-      - ./backend/app:/app/app        # live code mount (dev)
-      - appdata:/app/data             # persists ChromaDB + uploads
-      - hf_cache:/root/.cache/huggingface  # embedding model, downloaded once
+      <<: *backend-env
+      CORS_ORIGINS: http://localhost:3000,http://localhost:5173
+    volumes: *backend-volumes
     depends_on:
       postgres:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
       ollama:
         condition: service_started
+
+  ingestion-worker:
+    image: placement-backend:latest     # same image as backend (built by the backend service)
+    # Dev: restart the worker on code changes
+    command: watchfiles --filter python --target-type command "python -m app.workers.ingestion_worker" /app/app
+    environment: *backend-env
+    volumes: *backend-volumes
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_started      # backend builds the image + creates the DB schema
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    hostname: rabbitmq                  # RabbitMQ stores data per hostname; keep it fixed
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-placement}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-placement}
+    ports:
+      - "5672:5672"                     # AMQP (for running backend/worker locally)
+      - "15672:15672"                   # management UI: http://localhost:15672
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
 
   postgres:
     image: postgres:16-alpine
@@ -37,7 +79,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-placement}
       - POSTGRES_DB=${POSTGRES_DB:-placement_db}
     ports:
-      - "5432:5432"                   # for local dev / DB tools (pgAdmin, DBeaver)
+      - "5432:5432"                     # for local dev / DB tools (pgAdmin, DBeaver)
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -49,7 +91,7 @@ services:
   adminer:
     image: adminer
     ports:
-      - "8080:8080"                   # DB viewer: http://localhost:8080
+      - "8080:8080"                     # DB viewer: http://localhost:8080
     environment:
       - ADMINER_DEFAULT_SERVER=postgres
     depends_on:
@@ -66,4 +108,5 @@ volumes:
   appdata:
   hf_cache:
   pgdata:
+  rabbitmq:
   ollama:

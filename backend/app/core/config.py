@@ -17,6 +17,9 @@ class Settings(BaseSettings):
 
     max_upload_mb: int = 20
 
+    rabbitmq_url: str = "amqp://placement:placement@localhost:5672/"
+    ingest_queue: str = "document_ingest"
+
     @property
     def upload_dir(self) -> Path:
         return self.data_dir / "uploads"

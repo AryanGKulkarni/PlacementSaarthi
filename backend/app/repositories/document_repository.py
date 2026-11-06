@@ -1,8 +1,9 @@
 import uuid
+from datetime import datetime
 
 from sqlalchemy import select
 
-from app.db.models import Document
+from app.db.models import Document, DocumentStatus
 from app.repositories.base import BaseRepository
 
 
@@ -21,4 +22,22 @@ class DocumentRepository(BaseRepository):
 
     def refresh(self, document: Document) -> Document:
         self.db.refresh(document)
+        return document
+
+    def update_status(
+        self,
+        document: Document,
+        status: DocumentStatus,
+        *,
+        chunk_count: int | None = None,
+        error: str | None = None,
+        indexed_at: datetime | None = None,
+    ) -> Document:
+        document.status = status
+        document.error = error
+        if chunk_count is not None:
+            document.chunk_count = chunk_count
+        if indexed_at is not None:
+            document.indexed_at = indexed_at
+        self.db.flush()
         return document
