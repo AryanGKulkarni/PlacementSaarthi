@@ -8,19 +8,52 @@ services:
 
   backend:
     build: ./backend
+    # Dev: auto-reload on code changes (code is mounted from ./backend/app below)
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/app
     ports:
       - "8000:8000"
     environment:
+      - DATABASE_URL=postgresql+psycopg://${POSTGRES_USER:-placement}:${POSTGRES_PASSWORD:-placement}@postgres:5432/${POSTGRES_DB:-placement_db}
       - OLLAMA_URL=http://ollama:11434
       - MODEL=llama3.2:3b
       - CORS_ORIGINS=http://localhost:3000,http://localhost:5173
-      - DATA_DIR=/app/data            # sqlite db, chroma/, uploads/
+      - DATA_DIR=/app/data            # chroma/, uploads/, models/
       - HF_HOME=/root/.cache/huggingface
+      - WATCHFILES_FORCE_POLLING=true # file-change events don't cross Windows bind mounts
     volumes:
-      - appdata:/app/data             # persists SQLite + ChromaDB + uploads
+      - ./backend/app:/app/app        # live code mount (dev)
+      - appdata:/app/data             # persists ChromaDB + uploads
       - hf_cache:/root/.cache/huggingface  # embedding model, downloaded once
     depends_on:
-      - ollama
+      postgres:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-placement}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-placement}
+      - POSTGRES_DB=${POSTGRES_DB:-placement_db}
+    ports:
+      - "5432:5432"                   # for local dev / DB tools (pgAdmin, DBeaver)
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  adminer:
+    image: adminer
+    ports:
+      - "8080:8080"                   # DB viewer: http://localhost:8080
+    environment:
+      - ADMINER_DEFAULT_SERVER=postgres
+    depends_on:
+      - postgres
 
   ollama:
     image: ollama/ollama
@@ -32,4 +65,5 @@ services:
 volumes:
   appdata:
   hf_cache:
+  pgdata:
   ollama:

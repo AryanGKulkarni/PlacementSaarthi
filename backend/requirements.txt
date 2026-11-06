@@ -1,2 +1,6 @@
 fastapi
 uvicorn[standard]
+pydantic-settings
+sqlalchemy>=2.0
+psycopg[binary]
+python-multipart
