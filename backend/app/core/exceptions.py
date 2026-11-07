@@ -3,6 +3,7 @@
 
 class AppError(Exception):
     status_code = 400
+    headers: dict[str, str] | None = None
 
     def __init__(self, detail: str):
         super().__init__(detail)
@@ -11,6 +12,15 @@ class AppError(Exception):
 
 class BadRequestError(AppError):
     status_code = 400
+
+
+class UnauthorizedError(AppError):
+    status_code = 401
+    headers = {"WWW-Authenticate": "Bearer"}
+
+
+class ForbiddenError(AppError):
+    status_code = 403
 
 
 class NotFoundError(AppError):

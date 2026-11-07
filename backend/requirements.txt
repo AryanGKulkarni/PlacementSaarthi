@@ -8,3 +8,6 @@ pika
 pypdf
 httpx
 chromadb-client==1.5.9  # keep in sync with the chromadb/chroma image tag
+pyjwt
+bcrypt
+email-validator

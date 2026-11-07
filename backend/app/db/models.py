@@ -102,10 +102,11 @@ class StudentProfile(Base):
 
     full_name: Mapped[str] = mapped_column(String(120))
     roll_no: Mapped[str | None] = mapped_column(String(30), unique=True)
-    year: Mapped[int] = mapped_column(SmallInteger)
+    # Only full_name + department are required at registration; the rest is filled in later.
+    year: Mapped[int | None] = mapped_column(SmallInteger)
     passing_year: Mapped[int | None] = mapped_column(SmallInteger)
 
-    cgpa: Mapped[Decimal] = mapped_column(Numeric(4, 2))
+    cgpa: Mapped[Decimal | None] = mapped_column(Numeric(4, 2))
     active_backlogs: Mapped[int] = mapped_column(SmallInteger, default=0)
     tenth_percent: Mapped[Decimal | None] = mapped_column(Numeric(5, 2))
     twelfth_percent: Mapped[Decimal | None] = mapped_column(Numeric(5, 2))
