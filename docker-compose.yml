@@ -2,9 +2,12 @@
 x-backend-env: &backend-env
   DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-placement}:${POSTGRES_PASSWORD:-placement}@postgres:5432/${POSTGRES_DB:-placement_db}
   RABBITMQ_URL: amqp://${RABBITMQ_USER:-placement}:${RABBITMQ_PASSWORD:-placement}@rabbitmq:5672/
+  CHROMA_HOST: chromadb
+  CHROMA_PORT: "8000"
   OLLAMA_URL: http://ollama:11434
   MODEL: llama3.2:3b
-  DATA_DIR: /app/data                 # chroma/, uploads/, models/
+  EMBED_MODEL: nomic-embed-text
+  DATA_DIR: /app/data                 # uploads/, models/
   HF_HOME: /root/.cache/huggingface
   WATCHFILES_FORCE_POLLING: "true"    # file-change events don't cross Windows bind mounts
 
@@ -37,6 +40,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      chromadb:
+        condition: service_started
       ollama:
         condition: service_started
 
@@ -54,6 +59,17 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      chromadb:
+        condition: service_started
+
+  chromadb:
+    image: chromadb/chroma:1.5.9        # keep in sync with the chromadb client version
+    environment:
+      ANONYMIZED_TELEMETRY: "FALSE"
+    ports:
+      - "8001:8000"                     # host 8001 (8000 is the backend); API: http://localhost:8001/api/v2/heartbeat
+    volumes:
+      - chromadata:/data                # vectors + metadata persist here
 
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
@@ -109,4 +125,5 @@ volumes:
   hf_cache:
   pgdata:
   rabbitmq:
+  chromadata:
   ollama:

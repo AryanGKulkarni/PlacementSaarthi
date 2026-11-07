@@ -12,6 +12,9 @@ dist/
 # App data (sqlite, chroma, uploads)
 data/
 
+# Local test documents
+test_files/
+
 # OS / editor
 .DS_Store
 Thumbs.db

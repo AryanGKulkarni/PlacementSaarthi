@@ -5,3 +5,6 @@ sqlalchemy>=2.0
 psycopg[binary]
 python-multipart
 pika
+pypdf
+httpx
+chromadb-client==1.5.9  # keep in sync with the chromadb/chroma image tag

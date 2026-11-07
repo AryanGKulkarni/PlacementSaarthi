@@ -3,6 +3,7 @@
 Run:  python -m app.workers.ingestion_worker
 """
 
+import functools
 import json
 import logging
 import signal
@@ -11,8 +12,10 @@ import uuid
 from app.core.config import settings
 from app.db.session import SessionLocal
 from app.messaging import rabbitmq
-from app.repositories.document_repository import DocumentRepository
+from app.rag.embedder import Embedder
 from app.rag.ingestion_service import IngestionService
+from app.rag.vector_store import VectorStore
+from app.repositories.document_repository import DocumentRepository
 
 log = logging.getLogger("ingestion_worker")
 
@@ -21,7 +24,9 @@ log = logging.getLogger("ingestion_worker")
 HEARTBEAT_SECONDS = 600
 
 
-def handle_message(channel, method, properties, body: bytes) -> None:
+def handle_message(
+    channel, method, properties, body: bytes, *, embedder: Embedder, vector_store: VectorStore
+) -> None:
     try:
         document_id = uuid.UUID(json.loads(body)["document_id"])
     except (ValueError, KeyError, TypeError):
@@ -31,7 +36,7 @@ def handle_message(channel, method, properties, body: bytes) -> None:
 
     try:
         with SessionLocal() as db:
-            IngestionService(DocumentRepository(db)).process(document_id)
+            IngestionService(DocumentRepository(db), embedder, vector_store).process(document_id)
     except Exception:
         # DB down etc.: the document status couldn't even be recorded.
         # Requeue once; drop if it was already redelivered to avoid a hot loop.
@@ -51,13 +56,25 @@ def main() -> None:
     logging.getLogger("pika").setLevel(logging.WARNING)
     signal.signal(signal.SIGTERM, _raise_keyboard_interrupt)  # `docker stop` -> clean shutdown
 
+    # Created once and reused for every message (Chroma connects lazily on first use).
+    embedder = Embedder()
+    vector_store = VectorStore()
+    on_message = functools.partial(handle_message, embedder=embedder, vector_store=vector_store)
+
     connection = rabbitmq.connect(heartbeat=HEARTBEAT_SECONDS)
     channel = connection.channel()
     rabbitmq.declare_queue(channel, settings.ingest_queue)
     channel.basic_qos(prefetch_count=1)  # one document at a time
-    channel.basic_consume(queue=settings.ingest_queue, on_message_callback=handle_message)
+    channel.basic_consume(queue=settings.ingest_queue, on_message_callback=on_message)
 
-    log.info("Waiting for jobs on queue '%s'", settings.ingest_queue)
+    log.info(
+        "Waiting for jobs on queue '%s' (embed model: %s, chroma: %s:%s/%s)",
+        settings.ingest_queue,
+        embedder.model,
+        vector_store.host,
+        vector_store.port,
+        vector_store.collection_name,
+    )
     try:
         channel.start_consuming()
     except KeyboardInterrupt:
