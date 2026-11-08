@@ -50,10 +50,12 @@ class AuthService:
         try:
             self.users.add(user)
             self.users.commit()
-        except IntegrityError:
-            # Lost a race with a concurrent registration using the same email / employee ID.
+        except IntegrityError as exc:
             self.users.rollback()
-            raise ConflictError("An account with these details already exists") from None
+            if is_unique_violation(exc):
+                # Lost a race with a concurrent registration using the same email / employee ID.
+                raise ConflictError("An account with these details already exists") from None
+            raise  # NOT NULL / FK / CHECK violations are bugs or schema drift: surface them as 500s
 
         return self._token_for(user)
 
@@ -96,9 +98,11 @@ class AuthService:
         )
         try:
             self.users.commit()
-        except IntegrityError:  # another process created it at the same moment
+        except IntegrityError as exc:
             self.users.rollback()
-            return
+            if is_unique_violation(exc):  # another process created it at the same moment
+                return
+            raise
         log.info("Created default admin user %s", email)
         if len(password) < 8:
             log.warning("Default admin password is weak - change ADMIN_PASSWORD before deploying")
@@ -127,6 +131,13 @@ class AuthService:
     def _token_for(self, user: User) -> TokenOut:
         token, expires_in = security.create_access_token(user.id, user.role.value)
         return TokenOut(access_token=token, expires_in=expires_in, user=to_user_out(user))
+
+
+UNIQUE_VIOLATION = "23505"  # Postgres SQLSTATE
+
+
+def is_unique_violation(exc: IntegrityError) -> bool:
+    return getattr(exc.orig, "sqlstate", None) == UNIQUE_VIOLATION
 
 
 def to_user_out(user: User) -> UserOut:

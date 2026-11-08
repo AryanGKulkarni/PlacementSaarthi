@@ -37,3 +37,9 @@ class PayloadTooLargeError(AppError):
 
 class UnsupportedFileTypeError(AppError):
     status_code = 415
+
+
+class ServiceUnavailableError(AppError):
+    """A dependency (Ollama, ChromaDB, ...) is down or failing."""
+
+    status_code = 503

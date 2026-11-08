@@ -1,5 +1,7 @@
 """FastAPI dependency wiring: session -> repositories -> services, plus auth guards."""
 
+from functools import lru_cache
+
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
@@ -8,10 +10,15 @@ from app.core.exceptions import ForbiddenError, UnauthorizedError
 from app.db.models import Role, User
 from app.db.session import get_db
 from app.messaging.ingest_queue import IngestQueue
+from app.rag.embedder import Embedder
+from app.rag.llm import LLMClient
+from app.rag.retriever import Retriever
+from app.rag.vector_store import VectorStore
 from app.repositories.department_repository import DepartmentRepository
 from app.repositories.document_repository import DocumentRepository
 from app.repositories.user_repository import UserRepository
 from app.services.auth_service import AuthService
+from app.services.chat_service import ChatService
 from app.services.document_service import DocumentService
 
 # Shows an "Authorize" button in Swagger (/docs) where you paste the access token.
@@ -26,6 +33,13 @@ def get_document_service(db: Session = Depends(get_db)) -> DocumentService:
 
 def get_auth_service(db: Session = Depends(get_db)) -> AuthService:
     return AuthService(UserRepository(db), DepartmentRepository(db))
+
+
+# One shared instance per process: the Chroma client keeps its connection,
+# so we don't reconnect on every chat request. None of these hold per-user state.
+@lru_cache
+def get_chat_service() -> ChatService:
+    return ChatService(Retriever(Embedder(), VectorStore()), LLMClient())
 
 
 # ---- auth guards --------------------------------------------------------------

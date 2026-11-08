@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from app.api import auth, documents
+from app.api import auth, chat, documents
 from app.core.config import settings
 from app.core.exceptions import AppError
 from app.core.security import DEV_SECRET
@@ -53,6 +53,7 @@ async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
 
 
 app.include_router(auth.router)
+app.include_router(chat.router)
 app.include_router(documents.router)
 
 

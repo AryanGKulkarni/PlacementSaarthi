@@ -47,6 +47,13 @@ class Settings(BaseSettings):
     retrieval_max_context_chars: int = 6000  # total chunk text budget (~1,500 tokens)
     max_question_chars: int = 500
 
+    # LLM generation (model name comes from `model` / MODEL above)
+    llm_temperature: float = 0.1   # low = factual, repeatable answers
+    llm_num_ctx: int = 4096        # context window (tokens); Ollama's default is too small
+    llm_max_tokens: int = 512      # cap on answer length
+    llm_timeout: float = 180.0     # seconds
+    llm_keep_alive: str = "30m"    # keep the model loaded between questions
+
     rabbitmq_url: str = "amqp://placement:placement@localhost:5672/"
     ingest_queue: str = "document_ingest"
 
