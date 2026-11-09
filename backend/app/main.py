@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from app.api import auth, chat, dashboard, documents, students
+from app.api import auth, chat, dashboard, documents, drives, students
 from app.core.config import settings
 from app.core.exceptions import AppError
 from app.core.security import DEV_SECRET
@@ -57,6 +57,7 @@ app.include_router(auth.router)
 app.include_router(chat.router)
 app.include_router(dashboard.router)
 app.include_router(documents.router)
+app.include_router(drives.router)
 app.include_router(students.router)
 
 

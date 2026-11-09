@@ -14,5 +14,8 @@ class DepartmentRepository(BaseRepository):
     def is_empty(self) -> bool:
         return self.db.scalar(select(Department.id).limit(1)) is None
 
+    def get_many(self, ids: list[int]) -> list[Department]:
+        return list(self.db.scalars(select(Department).where(Department.id.in_(ids))))
+
     def add_many(self, departments: list[Department]) -> None:
         self.db.add_all(departments)

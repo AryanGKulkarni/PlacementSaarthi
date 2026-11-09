@@ -23,6 +23,7 @@ from app.services.auth_service import AuthService
 from app.services.chat_service import ChatService
 from app.services.dashboard_service import DashboardService
 from app.services.document_service import DocumentService
+from app.services.drive_service import DriveService
 from app.services.student_service import StudentService
 
 # Shows an "Authorize" button in Swagger (/docs) where you paste the access token.
@@ -41,6 +42,10 @@ def get_auth_service(db: Session = Depends(get_db)) -> AuthService:
 
 def get_dashboard_service(db: Session = Depends(get_db)) -> DashboardService:
     return DashboardService(DriveRepository(db))
+
+
+def get_drive_service(db: Session = Depends(get_db)) -> DriveService:
+    return DriveService(DriveRepository(db), DepartmentRepository(db))
 
 
 def get_student_service(db: Session = Depends(get_db)) -> StudentService:
