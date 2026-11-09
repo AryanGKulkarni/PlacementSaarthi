@@ -32,7 +32,7 @@ bearer_scheme = HTTPBearer(auto_error=False)
 # ---- services -----------------------------------------------------------------
 
 def get_document_service(db: Session = Depends(get_db)) -> DocumentService:
-    return DocumentService(DocumentRepository(db), DepartmentRepository(db), IngestQueue())
+    return DocumentService(DocumentRepository(db), IngestQueue())
 
 
 def get_auth_service(db: Session = Depends(get_db)) -> AuthService:
@@ -44,7 +44,7 @@ def get_dashboard_service(db: Session = Depends(get_db)) -> DashboardService:
 
 
 def get_student_service(db: Session = Depends(get_db)) -> StudentService:
-    return StudentService(StudentRepository(db))
+    return StudentService(StudentRepository(db), DriveRepository(db))
 
 
 # One shared instance per process: the Chroma client keeps its connection,

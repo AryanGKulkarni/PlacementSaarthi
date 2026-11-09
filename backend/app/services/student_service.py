@@ -1,24 +1,78 @@
 import logging
+import uuid
+from datetime import date
 from pathlib import Path
 
 from sqlalchemy.exc import IntegrityError
 
 from app.core.config import settings
-from app.core.exceptions import ConflictError, NotFoundError, UnsupportedFileTypeError
-from app.db.models import FileType, StudentProfile, User
+from app.core.exceptions import ConflictError, ForbiddenError, NotFoundError, UnsupportedFileTypeError
+from app.db.models import FileType, Role, StudentProfile, User
+from app.repositories.drive_repository import DriveRepository
 from app.repositories.student_repository import StudentRepository
-from app.schemas.student import Completeness, StudentProfileOut, StudentProfileUpdate
+from app.schemas.student import (
+    Completeness,
+    StudentDetail,
+    StudentListItem,
+    StudentListPage,
+    StudentProfileOut,
+    StudentProfileUpdate,
+)
 from app.services import file_storage
 from app.services.auth_service import is_unique_violation
 from app.services.file_storage import AsyncReadable
-from app.services.readiness import PROFILE_FIELDS, missing_profile_fields
+from app.services.readiness import PROFILE_FIELDS, compute_readiness, missing_profile_fields
 
 log = logging.getLogger(__name__)
 
 
 class StudentService:
-    def __init__(self, students: StudentRepository):
+    def __init__(self, students: StudentRepository, drives: DriveRepository):
         self.students = students
+        self.drives = drives
+
+    # ---- faculty / admin --------------------------------------------------------
+
+    def list_students(
+        self,
+        viewer: User,
+        *,
+        search: str | None,
+        department_id: int | None,
+        limit: int,
+        offset: int,
+    ) -> StudentListPage:
+        scope = _viewer_department(viewer)  # None = admin, sees every department
+        if scope is not None:
+            if department_id is not None and department_id != scope:
+                raise ForbiddenError("You can only view students of your own department")
+            department_id = scope
+
+        search = " ".join(search.split()) if search else None
+        profiles, total = self.students.list_profiles(
+            department_id=department_id,
+            search=search or None,
+            offset=offset,
+            limit=limit,
+        )
+        return StudentListPage(
+            items=[_list_item(p) for p in profiles], total=total, limit=limit, offset=offset
+        )
+
+    def student_detail(self, viewer: User, student_id: uuid.UUID) -> StudentDetail:
+        profile = self.students.get_profile(student_id)
+        scope = _viewer_department(viewer)
+        # Other departments' students get the same 404 as missing ones: don't reveal they exist.
+        if profile is None or (scope is not None and profile.department_id != scope):
+            raise NotFoundError("Student not found")
+
+        dept_drives = self.drives.upcoming_for_department(
+            profile.department_id, profile.passing_year, date.today()
+        )
+        return StudentDetail(
+            profile=to_profile_out(profile.user, profile),
+            readiness=compute_readiness(profile, dept_drives),
+        )
 
     # ---- profile ----------------------------------------------------------------
 
@@ -91,6 +145,28 @@ class StudentService:
         if profile is None:
             raise NotFoundError("Student profile not found")
         return profile
+
+
+def _viewer_department(viewer: User) -> int | None:
+    """Department a staff user is limited to; None means all departments (admin)."""
+    if viewer.role is Role.admin:
+        return None
+    if viewer.role is Role.faculty and viewer.faculty_profile is not None:
+        return viewer.faculty_profile.department_id
+    raise ForbiddenError("You don't have permission to do this")
+
+
+def _list_item(p: StudentProfile) -> StudentListItem:
+    return StudentListItem(
+        user_id=str(p.user_id),
+        full_name=p.full_name,
+        email=p.user.email,
+        department_id=p.department_id,
+        department_code=p.department.code,
+        year=p.year,
+        cgpa=float(p.cgpa) if p.cgpa is not None else None,
+        skills=p.skills or [],
+    )
 
 
 def _resume_path(profile: StudentProfile) -> Path | None:

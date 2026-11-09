@@ -4,6 +4,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from app.schemas.dashboard import Readiness
+
 MAX_TAGS = 30
 
 Tag = Annotated[str, Field(min_length=1, max_length=50)]
@@ -124,3 +126,30 @@ class StudentProfileOut(BaseModel):
     has_resume: bool
     completeness: Completeness
     updated_at: datetime
+
+
+# ---- faculty / admin views --------------------------------------------------------
+
+class StudentListItem(BaseModel):
+    user_id: str
+    full_name: str
+    email: str
+    department_id: int
+    department_code: str  # branch
+    year: int | None
+    cgpa: float | None
+    skills: list[str]
+
+
+class StudentListPage(BaseModel):
+    items: list[StudentListItem]
+    total: int   # all matches, ignoring limit/offset
+    limit: int
+    offset: int
+
+
+class StudentDetail(BaseModel):
+    """'View details': full profile + readiness score (no tips or drives)."""
+
+    profile: StudentProfileOut
+    readiness: Readiness
