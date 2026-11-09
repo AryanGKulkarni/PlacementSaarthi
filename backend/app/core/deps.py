@@ -16,10 +16,14 @@ from app.rag.retriever import Retriever
 from app.rag.vector_store import VectorStore
 from app.repositories.department_repository import DepartmentRepository
 from app.repositories.document_repository import DocumentRepository
+from app.repositories.drive_repository import DriveRepository
+from app.repositories.student_repository import StudentRepository
 from app.repositories.user_repository import UserRepository
 from app.services.auth_service import AuthService
 from app.services.chat_service import ChatService
+from app.services.dashboard_service import DashboardService
 from app.services.document_service import DocumentService
+from app.services.student_service import StudentService
 
 # Shows an "Authorize" button in Swagger (/docs) where you paste the access token.
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -33,6 +37,14 @@ def get_document_service(db: Session = Depends(get_db)) -> DocumentService:
 
 def get_auth_service(db: Session = Depends(get_db)) -> AuthService:
     return AuthService(UserRepository(db), DepartmentRepository(db))
+
+
+def get_dashboard_service(db: Session = Depends(get_db)) -> DashboardService:
+    return DashboardService(DriveRepository(db))
+
+
+def get_student_service(db: Session = Depends(get_db)) -> StudentService:
+    return StudentService(StudentRepository(db))
 
 
 # One shared instance per process: the Chroma client keeps its connection,

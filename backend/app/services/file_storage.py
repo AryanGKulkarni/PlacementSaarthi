@@ -25,10 +25,21 @@ class TempFile:
         self.path.unlink(missing_ok=True)
 
 
-async def save_to_temp(source: AsyncReadable, file_type: FileType) -> TempFile:
-    """Stream an upload to a temp file, enforcing the size limit and hashing as we go."""
-    max_bytes = settings.max_upload_mb * 1024 * 1024
-    tmp_path = settings.upload_dir / f".tmp-{uuid.uuid4()}"
+async def save_to_temp(
+    source: AsyncReadable,
+    file_type: FileType,
+    *,
+    max_mb: int | None = None,
+    directory: Path | None = None,
+) -> TempFile:
+    """Stream an upload to a temp file, enforcing the size limit and hashing as we go.
+
+    Defaults: knowledge-base limit and upload dir. The temp file is created in the
+    same directory as the final file so promote() is an atomic rename.
+    """
+    max_mb = max_mb or settings.max_upload_mb
+    max_bytes = max_mb * 1024 * 1024
+    tmp_path = (directory or settings.upload_dir) / f".tmp-{uuid.uuid4()}"
     sha = hashlib.sha256()
     size = 0
     first = True
@@ -41,7 +52,7 @@ async def save_to_temp(source: AsyncReadable, file_type: FileType) -> TempFile:
                     _check_content(chunk, file_type)
                 size += len(chunk)
                 if size > max_bytes:
-                    raise PayloadTooLargeError(f"File exceeds {settings.max_upload_mb} MB limit")
+                    raise PayloadTooLargeError(f"File exceeds {max_mb} MB limit")
                 sha.update(chunk)
                 out.write(chunk)
     except BaseException:
@@ -55,9 +66,9 @@ async def save_to_temp(source: AsyncReadable, file_type: FileType) -> TempFile:
     return TempFile(tmp_path, size, sha.hexdigest())
 
 
-def promote(temp: TempFile, stored_filename: str) -> Path:
-    """Move a temp file to its final name in the upload directory."""
-    final_path = settings.upload_dir / stored_filename
+def promote(temp: TempFile, stored_filename: str, directory: Path | None = None) -> Path:
+    """Move a temp file to its final name (replacing any existing file of that name)."""
+    final_path = (directory or settings.upload_dir) / stored_filename
     temp.path.replace(final_path)
     return final_path
 

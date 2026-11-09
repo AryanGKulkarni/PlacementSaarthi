@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     data_dir: Path = Path("./data")
 
     max_upload_mb: int = 20
+    max_resume_mb: int = 5
 
     jwt_secret: str = "dev-insecure-secret-change-me"  # set JWT_SECRET in .env
     jwt_algorithm: str = "HS256"
@@ -60,6 +61,10 @@ class Settings(BaseSettings):
     @property
     def upload_dir(self) -> Path:
         return self.data_dir / "uploads"
+
+    @property
+    def resume_dir(self) -> Path:
+        return self.data_dir / "resumes"
 
 
 settings = Settings()
