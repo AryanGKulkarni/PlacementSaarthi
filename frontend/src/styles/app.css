@@ -1,0 +1,17 @@
+/* Additions on top of the Figma design system (global.css). */
+
+.app-loading {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: #f7f8fa;
+}
+.app-loading .button-spinner {
+  width: 22px;
+  height: 22px;
+  border-color: #4f46e533;
+  border-top-color: var(--primary);
+}
