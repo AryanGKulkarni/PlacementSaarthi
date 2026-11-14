@@ -120,6 +120,8 @@ def _list_item(doc: Document) -> DocumentListItem:
     return DocumentListItem(
         id=doc.id,
         filename=doc.original_filename,
+        title=doc.title,
+        description=doc.description,
         status=doc.status,
         chunks=doc.chunk_count,
         uploaded_at=doc.uploaded_at,

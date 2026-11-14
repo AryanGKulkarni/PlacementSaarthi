@@ -21,7 +21,7 @@ GENERAL_TIPS = [
     Tip(type="general", text="Do a mock interview and prepare a one-minute introduction about yourself."),
     Tip(type="general", text="Keep your resume to one page and add your latest projects to it."),
     Tip(type="general", text="Ask the assistant about a company's selection process before its drive.",
-        action="/chat"),
+        action="/assistant"),
 ]
 
 
@@ -75,7 +75,7 @@ def _skill_gap_tip(profile: StudentProfile, drives: list[Drive]) -> Tip | None:
     return Tip(
         type="skill_gap",
         text=f"Learn {gap.name} - it is asked for by {drives_text} for your branch.",
-        action=f"/chat?q={quote(f'How should I learn {gap.name} for placements?')}",
+        action=f"/assistant?q={quote(f'How should I learn {gap.name} for placements?')}",
     )
 
 

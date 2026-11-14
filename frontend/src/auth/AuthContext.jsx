@@ -56,9 +56,14 @@ export function AuthProvider({ children }) {
     [startSession],
   )
 
+  /** Merge changes into the session user, e.g. a new full_name after a profile save. */
+  const updateUser = useCallback((changes) => {
+    setUser((u) => (u ? { ...u, ...changes } : u))
+  }, [])
+
   const value = useMemo(
-    () => ({ user, loading, login, register, logout }),
-    [user, loading, login, register, logout],
+    () => ({ user, loading, login, register, logout, updateUser }),
+    [user, loading, login, register, logout, updateUser],
   )
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

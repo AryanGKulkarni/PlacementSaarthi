@@ -25,6 +25,8 @@ class DocumentOut(BaseModel):
 class DocumentListItem(BaseModel):
     id: uuid.UUID
     filename: str
+    title: str | None
+    description: str | None
     status: DocumentStatus
     chunks: int
     uploaded_at: datetime

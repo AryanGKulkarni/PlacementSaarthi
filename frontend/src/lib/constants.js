@@ -23,3 +23,10 @@ export const ROLE_LABELS = {
   faculty: 'Faculty',
   admin: 'Admin',
 }
+
+// Badge tone for the readiness level returned by the backend.
+export const LEVEL_TONE = {
+  Ready: 'green',
+  'Almost ready': 'amber',
+  'Needs work': 'red',
+}

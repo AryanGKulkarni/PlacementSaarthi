@@ -15,3 +15,374 @@
   border-color: #4f46e533;
   border-top-color: var(--primary);
 }
+
+/* Centered spinner while a page loads its data. */
+.page-loading {
+  min-height: 320px;
+  display: grid;
+  place-items: center;
+}
+.page-loading .button-spinner {
+  width: 22px;
+  height: 22px;
+  border-color: #4f46e533;
+  border-top-color: var(--primary);
+}
+
+/* Error variant of the Figma toast (success is the default green). */
+.toast-error > span {
+  background: #ef4444;
+}
+
+/* Error banners inside page sections (the base style comes from the auth pages). */
+.profile-section .auth-error-banner,
+.profile-form > .auth-error-banner {
+  margin-bottom: 14px;
+}
+
+/* ---- utilities ---- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.muted-text {
+  color: #a1a1aa;
+  font-size: 10px;
+}
+
+/* ---- student dashboard ---- */
+.ring-value {
+  transition: stroke-dashoffset 0.8s ease;
+}
+.metric-weight {
+  font-style: normal;
+  color: #a1a1aa;
+  font-size: 9px;
+}
+.metric-detail {
+  display: block;
+  margin-top: 6px;
+  color: #8b8b94;
+  font-size: 9px;
+}
+.bar i {
+  transition: width 0.6s ease;
+}
+.metric-average .bar i {
+  background: #f59e0b;
+}
+.metric-low .bar i {
+  background: #ef4444;
+}
+.metric-missing strong {
+  color: #b45309;
+}
+
+.tip-action {
+  align-self: flex-start;
+  margin-top: 3px;
+  font-size: 9px;
+}
+
+.empty-drives {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 40px 24px;
+  text-align: center;
+  color: #8b8b94;
+}
+.empty-drives strong {
+  color: #27272a;
+  font-size: 12px;
+}
+.empty-drives p {
+  max-width: 420px;
+  margin: 0;
+  font-size: 10px;
+}
+
+.drive-row {
+  cursor: pointer;
+}
+.drive-row .icon-btn svg {
+  transition: transform 0.2s ease;
+}
+.drive-row.open .icon-btn svg {
+  transform: rotate(90deg);
+}
+.drive-row.open td {
+  border-bottom-color: transparent;
+  background: #fcfcfd;
+}
+.skill-match {
+  color: #27272a;
+  font-weight: 600;
+}
+.drive-details-row td {
+  background: #fcfcfd;
+  padding-top: 0;
+}
+.drive-details-row:hover {
+  background: transparent;
+}
+.drive-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 40px;
+  padding: 4px 0 6px 41px;
+}
+.drive-details dl {
+  display: flex;
+  gap: 32px;
+  margin: 0;
+}
+.drive-details dt,
+.drive-skills > span {
+  color: #92929b;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.drive-details dd {
+  margin: 0;
+  color: #27272a;
+}
+.drive-skills {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.drive-skills > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.drive-skills .text-link {
+  align-self: flex-start;
+}
+.skill-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 600;
+  border: 1px solid;
+}
+.skill-chip.have {
+  color: #15803d;
+  background: #ecfdf3;
+  border-color: #d1fae0;
+}
+.skill-chip.missing {
+  color: #be123c;
+  background: #fff1f2;
+  border-color: #ffe0e5;
+  border-style: dashed;
+}
+@media (max-width: 640px) {
+  .drive-details {
+    padding-left: 0;
+  }
+  .drive-details dl {
+    flex-wrap: wrap;
+    gap: 14px 24px;
+  }
+}
+
+/* ---- faculty / admin students page ---- */
+.clickable-row {
+  cursor: pointer;
+}
+.table-scroll.is-refreshing {
+  opacity: 0.55;
+  transition: opacity 0.15s ease;
+}
+.table-message {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px 22px;
+}
+.table-message .auth-error-banner {
+  width: 100%;
+  box-sizing: border-box;
+}
+.drawer-readiness {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.drawer-readiness .ring-text strong {
+  font-size: 26px;
+  letter-spacing: -1px;
+}
+.drawer-readiness .ring-text span {
+  margin-top: 8px;
+}
+.drawer-readiness .metric-list {
+  gap: 12px;
+}
+.detail-grid strong.not-added {
+  color: #a1a1aa;
+  font-weight: 500;
+}
+.drawer-missing {
+  margin: 0;
+  color: #b45309;
+  font-size: 10px;
+}
+a.btn {
+  text-decoration: none;
+}
+@media (max-width: 480px) {
+  .drawer-readiness {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .drawer-readiness .ring-wrap {
+    align-self: center;
+  }
+}
+
+/* ---- knowledge base ---- */
+.document-card .toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.doc-error {
+  max-width: 220px;
+  color: #be123c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.empty-mini .btn {
+  margin-top: 6px;
+}
+.modal-file-picker.input-error {
+  border-color: #fca5a5;
+}
+.modal-body .auth-error-banner {
+  margin-bottom: 14px;
+}
+.upload-progress i {
+  transition: width 0.2s ease;
+}
+@media (max-width: 640px) {
+  .document-card > .card-title-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .document-card .toolbar-right {
+    flex-wrap: wrap;
+  }
+}
+
+/* ---- placement drives ---- */
+.drives-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.drives-toolbar .toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.status-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  padding: 3px;
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  border-radius: 9px;
+}
+.status-tabs button {
+  border: 0;
+  background: transparent;
+  color: #71717a;
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-size: 10px;
+  font-weight: 600;
+}
+.status-tabs button.selected {
+  color: #4338ca;
+  background: #fff;
+  box-shadow: 0 1px 3px #00000015;
+}
+.drive-grid.is-refreshing {
+  opacity: 0.55;
+  transition: opacity 0.15s ease;
+}
+.drive-description {
+  margin: 12px 0 0;
+  color: #71717a;
+  font-size: 10px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.drive-card-foot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f1;
+  color: #71717a;
+  font-size: 10px;
+}
+.drive-card-foot .closed {
+  color: #be123c;
+}
+.drives-pagination {
+  margin-top: 16px;
+  border-top: 0;
+}
+.empty-mini.card {
+  padding: 40px 24px;
+}
+.drive-modal {
+  width: min(640px, 100%);
+}
+.modal-subhead {
+  margin: 4px 0 12px;
+  color: #3f3f46;
+  font-size: 11px;
+}
+.field-note {
+  display: block;
+  color: #a1a1aa;
+  font-size: 9px;
+}
+.choice-chips button:disabled {
+  cursor: default;
+}
+@media (max-width: 640px) {
+  .drive-modal .form-grid {
+    grid-template-columns: 1fr;
+  }
+}

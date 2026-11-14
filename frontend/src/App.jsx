@@ -5,8 +5,13 @@ import { Logo } from './components/ui.jsx'
 import AppShell from './layout/AppShell.jsx'
 import { navigate, usePath } from './lib/router.js'
 import ComingSoon from './pages/ComingSoon.jsx'
+import DrivesPage from './pages/DrivesPage.jsx'
+import KnowledgePage from './pages/KnowledgePage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
+import ProfilePage from './pages/ProfilePage.jsx'
 import RegisterPage from './pages/RegisterPage.jsx'
+import StudentDashboard from './pages/StudentDashboard.jsx'
+import StudentsPage from './pages/StudentsPage.jsx'
 import { ROUTES, canAccess, homeFor } from './routes.js'
 
 const PUBLIC_PATHS = ['/login', '/register']
@@ -31,11 +36,21 @@ export default function App() {
   if (!user) return path === '/register' ? <RegisterPage /> : <LoginPage />
 
   const route = ROUTES[path]
+  const Page = PAGES[path]
   return (
     <AppShell path={path}>
-      <ComingSoon title={route.title} icon={route.icon} />
+      {Page ? <Page /> : <ComingSoon title={route.title} icon={route.icon} />}
     </AppShell>
   )
+}
+
+// Built pages; every other route in ROUTES shows the ComingSoon placeholder.
+const PAGES = {
+  '/dashboard': StudentDashboard,
+  '/profile': ProfilePage,
+  '/students': StudentsPage,
+  '/knowledge': KnowledgePage,
+  '/drives': DrivesPage,
 }
 
 function FullPageLoader() {
