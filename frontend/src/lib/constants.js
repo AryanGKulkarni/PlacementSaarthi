@@ -9,6 +9,15 @@ export const DEPARTMENTS = {
   5: { code: 'CIVIL', name: 'Civil Engineering' },
 }
 
+// Values match the backend Designation enum.
+export const DESIGNATIONS = [
+  ['assistant_professor', 'Assistant Professor'],
+  ['associate_professor', 'Associate Professor'],
+  ['professor', 'Professor'],
+  ['hod', 'Head of Department (HOD)'],
+  ['tpo', 'Training & Placement Officer (TPO)'],
+]
+
 export const ROLE_LABELS = {
   student: 'Student',
   faculty: 'Faculty',

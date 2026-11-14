@@ -6,6 +6,7 @@ import AppShell from './layout/AppShell.jsx'
 import { navigate, usePath } from './lib/router.js'
 import ComingSoon from './pages/ComingSoon.jsx'
 import LoginPage from './pages/LoginPage.jsx'
+import RegisterPage from './pages/RegisterPage.jsx'
 import { ROUTES, canAccess, homeFor } from './routes.js'
 
 const PUBLIC_PATHS = ['/login', '/register']
@@ -27,10 +28,7 @@ export default function App() {
 
   if (loading || target !== path) return <FullPageLoader />
 
-  if (!user) {
-    // Register page is next; until then it reuses the placeholder.
-    return path === '/register' ? <RegisterPlaceholder /> : <LoginPage />
-  }
+  if (!user) return path === '/register' ? <RegisterPage /> : <LoginPage />
 
   const route = ROUTES[path]
   return (
@@ -45,25 +43,6 @@ function FullPageLoader() {
     <div className="app-loading" role="status" aria-label="Loading">
       <Logo />
       <span className="button-spinner" aria-hidden="true" />
-    </div>
-  )
-}
-
-function RegisterPlaceholder() {
-  return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <div className="auth-head">
-          <h1>Create your account</h1>
-          <p>Registration is coming soon.</p>
-        </div>
-        <div className="auth-switch">
-          Already have an account?{' '}
-          <button type="button" onClick={() => navigate('/login')}>
-            Log in
-          </button>
-        </div>
-      </div>
     </div>
   )
 }
